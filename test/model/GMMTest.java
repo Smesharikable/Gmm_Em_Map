@@ -111,9 +111,7 @@ public class GMMTest {
         
         double expResult = 0.0912;
         double result = instance.prior(vector).doubleValue();
-        assertEquals(expResult, result, 0.0);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        assertEquals(expResult, result, 0.0001);
     }
 
     /**
@@ -152,7 +150,5 @@ public class GMMTest {
         expResult[1] = new Matrix(res2, 1);
         Matrix[] result = instance.posterior(input);
         assertEquals(expResult[0].get(0, 0), result[0].get(0, 0), 0.0001);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 }
