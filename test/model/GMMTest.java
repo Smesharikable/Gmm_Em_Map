@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package src;
+package model;
 
 import Jama.Matrix;
 import java.math.BigDecimal;
@@ -109,7 +109,7 @@ public class GMMTest {
         
         GMM instance = new GMM(mu, sigma, p);
         
-        double expResult = 0.25;
+        double expResult = 0.0912;
         double result = instance.prior(vector).doubleValue();
         assertEquals(expResult, result, 0.0);
         // TODO review the generated test code and remove the default call to fail.
@@ -121,7 +121,7 @@ public class GMMTest {
      */
     @Test
     public void testPosterior() {
-        System.out.println("posterior");
+        System.out.println("posterior");    
         
         double[] inVect = {2, 2};
         double[][] inmu = {{1, 2}, {2, 3}};
@@ -145,11 +145,13 @@ public class GMMTest {
         sigma[1] = new Matrix(insigma[1], 2, 2);
         
         GMM instance = new GMM(mu, sigma, p);
-        Matrix[] expResult = new Matrix[1];
-        double[] res1 = {0.6792, 0.3208}; 
-        expResult[0] = new Matrix(res1, 2);
+        Matrix[] expResult = new Matrix[2];
+        double[] res1 = {0.6792};
+        double[] res2 = {0.3208};
+        expResult[0] = new Matrix(res1, 1);
+        expResult[1] = new Matrix(res2, 1);
         Matrix[] result = instance.posterior(input);
-        assertArrayEquals(expResult, result);
+        assertEquals(expResult[0].get(0, 0), result[0].get(0, 0), 0.0001);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }

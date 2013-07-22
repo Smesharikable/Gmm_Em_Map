@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package src;
+package model;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -16,7 +16,7 @@ import org.junit.runners.Suite;
  * @author 1
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({src.GMMTest.class})
+@Suite.SuiteClasses({model.GMMTest.class})
 public class SrcSuite {
 
     @BeforeClass
