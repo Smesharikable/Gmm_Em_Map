@@ -120,7 +120,7 @@ public class GMM {
         mMultiplier = new BigDecimal[mCount];
         mInvSigmas = new Matrix[mCount];
         for (int i = 0; i < mCount; i ++) {
-            //double temp = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
+            double temp = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
             mMultiplier[i] = new BigDecimal(
                     1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det())),
                     MathContext.DECIMAL128);
@@ -141,7 +141,7 @@ public class GMM {
         bdResult = bdResult.pow(intDegree, MathContext.DECIMAL128);
         BigDecimal fault = new BigDecimal(Math.exp(degree - intDegree), MathContext.DECIMAL128);
         
-        return bdResult.multiply(fault).multiply(fault).multiply(mMultiplier[i]);
+        return bdResult.multiply(fault).multiply(mMultiplier[i]);
     }
     
 }
