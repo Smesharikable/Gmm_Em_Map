@@ -24,25 +24,22 @@ public class GMM {
     private Matrix[] mInvSigmas;
     private int mCount;
     private int mDimension;
-    private final int mMinDegree = -92;
-    //private BigDecimal[] mFaultMult;
+    private static final int mMinDegree = -92;
     
     /**
      * 
-     * @param mu - 1 by d matrices
+     * @param mu - d by 1 matrices
      * @param sigma - d by d covariations matrices
      * @param p  - array of proportions
      */
-    public GMM(Matrix[] mu, Matrix[] sigma, BigDecimal[] p)
-    {
+    public GMM(Matrix[] mu, Matrix[] sigma, BigDecimal[] p) {
         mMu = mu;
         mSigma = sigma;
         mP = p;
         initialize();
     }
     
-    public GMM(Matrix[] mu, Matrix[] sigma, double[] p)
-    {
+    public GMM(Matrix[] mu, Matrix[] sigma, double[] p) {
         mMu = mu;
         mSigma = sigma;
         mP = new BigDecimal[p.length];
@@ -52,8 +49,7 @@ public class GMM {
         initialize();
     }
     
-    public GMM(File fin) throws FileNotFoundException
-    {
+    public GMM(File fin) throws FileNotFoundException {
         try {
             ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fin)));
             mMu = (Matrix[]) ois.readObject();
@@ -77,8 +73,7 @@ public class GMM {
     
     public int getNDimensions() { return mDimension; }
     
-    public BigDecimal prior(Matrix vector)
-    {
+    public BigDecimal prior(Matrix vector) {
         BigDecimal result = new BigDecimal(0, MathContext.DECIMAL128);
         BigDecimal temp;
         for (int i = 0; i < mCount; i ++) {
@@ -95,17 +90,17 @@ public class GMM {
      * @return Matrix of posterior probabilities,
      *      which cosist of mCount colums.
      */
-    public Matrix[] posterior(Matrix[] input)
-    {
+    public Matrix[] posterior(Matrix input) {
         Matrix[] result = new Matrix[mCount];
+        Matrix temp;
         for (int component = 0; component < mCount; component ++) {
-            result[component] = new Matrix(1, input.length);
-            for (int vector = 0; vector < input.length; vector ++) {
-                // check indexes
+            result[component] = new Matrix(1, input.getColumnDimension());
+            for (int vector = 0; vector < input.getColumnDimension(); vector ++) {
+                temp = input.getMatrix(0, input.getRowDimension() - 1, vector, vector);
                 double value = mP[component].multiply(
-                            componentDensity(component, input[vector])
+                            componentDensity(component, temp)
                         ).divide(
-                            prior(input[vector]), MathContext.DECIMAL128
+                            prior(temp), MathContext.DECIMAL128
                         ).doubleValue();
                 result[component].set(0, vector, value);
             }
@@ -113,8 +108,16 @@ public class GMM {
         return result;
     }
     
-    private void initialize()
-    {
+    public static double[] normilize(double[] weights) {
+        double sum = 0;
+        for (double i : weights) sum += i;
+        for (int i = 0; i < weights.length; i++) {
+            weights[i] /= sum;
+        }
+        return weights;
+    }
+    
+    private void initialize() {
         mCount = mP.length;
         mDimension = mMu[0].getRowDimension();
         mMultiplier = new BigDecimal[mCount];
@@ -128,8 +131,7 @@ public class GMM {
         }
     }
     
-    private BigDecimal componentDensity(int i, Matrix vector)
-    {
+    private BigDecimal componentDensity(int i, Matrix vector) {
         Matrix secondMult = vector.minus(mMu[i]);
         Matrix firstMult = secondMult.transpose();
         double degree = -0.5 * firstMult.times(mInvSigmas[i]).times(secondMult).get(0, 0);
