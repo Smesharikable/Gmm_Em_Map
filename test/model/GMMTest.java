@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import Jama.Matrix;
@@ -45,26 +41,13 @@ public class GMMTest {
         System.out.println("prior");
         
         double[] input = {2, 2};
-        double[][] inmu = {{1, 2}, {2, 3}};
 //        double[][][] insigma = {
 //            {{5.7718, 1.7160},  {1.7160, 0.5102}}, 
 //            {{3.0287, -0.7990}, {-0.7990, 0.2108}}
 //        };
-        double[][][] insigma = {
-            {{2, 0}, {0, 0.5}}, 
-            {{2, 0}, {0, 0.5}}
-        };
-        double[] p = {0.5, 0.5};
         
         Matrix vector = new Matrix(input, 2);
-        Matrix[] mu = new Matrix[2];
-        mu[0] = new Matrix(inmu[0], 2);
-        mu[1] = new Matrix(inmu[1], 2);
-        Matrix[] sigma = new Matrix[2];
-        sigma[0] = new Matrix(insigma[0], 2, 2);
-        sigma[1] = new Matrix(insigma[1], 2, 2);
-        
-        GMM instance = new GMM(mu, sigma, p);
+        GMM instance = GMMTest.testGMM();
         
         double expResult = 0.0912;
         double result = instance.prior(vector).doubleValue();
@@ -79,13 +62,27 @@ public class GMMTest {
         System.out.println("posterior");    
         
         double[] inVect = {2, 2};
-        double[][] inmu = {{1, 2}, {2, 3}};
+        Matrix input = new Matrix(inVect, 2);
+        
+        GMM instance = GMMTest.testGMM();
+        
+        Matrix[] expResult = new Matrix[2];
+        double[] res1 = {0.6792};
+        double[] res2 = {0.3208};
+        expResult[0] = new Matrix(res1, 1);
+        expResult[1] = new Matrix(res2, 1);
+        Matrix[] result = instance.posterior(input);
+        assertEquals(expResult[0].get(0, 0), result[0].get(0, 0), 0.0001);
+    }
+    
+    public static GMM testGMM() {
+        double[][] inmu = {{1, 2}, 
+                           {2, 3}};
         double[][][] insigma = {
             {{2, 0}, {0, 0.5}}, 
             {{2, 0}, {0, 0.5}}
         };
         double[] p = {0.5, 0.5};
-        Matrix input = new Matrix(inVect, 2);
         
         Matrix[] mu = new Matrix[2];
         mu[0] = new Matrix(inmu[0], 2);
@@ -94,13 +91,6 @@ public class GMMTest {
         sigma[0] = new Matrix(insigma[0], 2, 2);
         sigma[1] = new Matrix(insigma[1], 2, 2);
         
-        GMM instance = new GMM(mu, sigma, p);
-        Matrix[] expResult = new Matrix[2];
-        double[] res1 = {0.6792};
-        double[] res2 = {0.3208};
-        expResult[0] = new Matrix(res1, 1);
-        expResult[1] = new Matrix(res2, 1);
-        Matrix[] result = instance.posterior(input);
-        assertEquals(expResult[0].get(0, 0), result[0].get(0, 0), 0.0001);
+        return new GMM(mu, sigma, p);
     }
 }
