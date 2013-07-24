@@ -18,6 +18,24 @@ public class MatrixReader {
        this.inMatrix = new Matrix(featVectAmount, featVectDimension);
     }
     
+    /**
+     * Divides data matrix into array of matrix 
+     * @param data amount of feature vectors X dimension(39)
+     * @return array of feature matrix
+     */
+    public static Matrix[] parseMatrix(Matrix data, int stateAmount) {
+        int vectorAmount = data.getColumnDimension();
+        int blockLength = vectorAmount / stateAmount;
+        Matrix[] outMatrix = new Matrix[stateAmount];
+        for (int i = 0; i < stateAmount; i++ ) {
+            int[] arrayOfRows;
+            for (int j = i * blockLength; j < (i + 1) * blockLength; j++) {
+                
+            }
+            outMatrix[i] = data.getMatrix(arrayOfRows, 0, 38);
+        } 
+        return null;
+    }
     
     /**
      * Sets new path for data file
@@ -84,6 +102,7 @@ public class MatrixReader {
     /**
      * Matrix which will be filled
      */
+    
     private Matrix inMatrix;
     
     /**
