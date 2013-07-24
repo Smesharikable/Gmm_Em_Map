@@ -22,7 +22,6 @@ public class GMM {
     private Matrix[] mInvSigmas;
     private int mCount;
     private int mDimension;
-    private static final int mMinDegree = -92;
     
     /**
      * 
