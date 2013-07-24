@@ -5,6 +5,7 @@
 package algorithms;
 
 import Jama.Matrix;
+import java.math.BigDecimal;
 import model.GMM;
 import model.GMMTest;
 import org.junit.After;
@@ -46,9 +47,6 @@ public class MapTest {
     public void testFitByMeans() {
         System.out.println("fitByMeans");
         
-//        double[][] dinput = {{2, 2}, 
-//                             {1, 2.5}, 
-//                             {3, 4}};
         double[][] dinput = {{2, 1,   3}, 
                              {2, 2.5, 4}};       
         double[][] mu = {{1.0420, 2.0189},
@@ -74,14 +72,29 @@ public class MapTest {
     @Test
     public void testFitByWeights() {
         System.out.println("fitByWeights");
-        Matrix input = null;
-        int iterations = 0;
-        int states = 0;
-        Map instance = null;
-        GMM[] expResult = null;
+        double[][] dinput = {{2, 1,   3}, 
+                             {2, 2.5, 4}};  
+        Matrix input = new Matrix(dinput, 2, 3);
+        int iterations = 1;
+        int states = 2;
+        
+        GMM testGMM = GMMTest.testGMM();
+        Map instance = new Map(testGMM);
+        
+        double[][] expResult = {{0.5054, 0.4946},
+                                {0.4880, 0.5120}};
         GMM[] result = instance.fitByWeights(input, iterations, states);
-        assertArrayEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        BigDecimal[][] bdres = new BigDecimal[2][testGMM.getNComponents()];
+        bdres[0] = result[0].getP();
+        bdres[1] = result[1].getP();
+        double[][] res = new double[2][testGMM.getNComponents()];
+        for (int i = 0; i < 2; i ++) {
+            for (int j = 0; j < testGMM.getNComponents(); j++) {
+                res[i][j] = bdres[i][j].doubleValue();
+            }
+        }
+        
+        assertArrayEquals(expResult[0], res[0], 0.0001);
+        assertArrayEquals(expResult[1], res[1], 0.0001);
     }
 }

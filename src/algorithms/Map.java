@@ -68,14 +68,14 @@ public class Map {
         
         for (int i = 0; i < states - 1 ; i++) {
             result[i] = fitByWeights(
-                    input.getMatrix(0, input.getRowDimension(), low, low + chunk), 
+                    input.getMatrix(0, input.getRowDimension() - 1, low, low + chunk - 1), 
                     iterations
                     );
             low += chunk;
         }
         
-        result[states] = fitByWeights(
-                    input.getMatrix(0, input.getRowDimension(), low, input.getColumnDimension()), 
+        result[states - 1] = fitByWeights(
+                    input.getMatrix(0, input.getRowDimension() - 1, low, input.getColumnDimension() - 1), 
                     iterations
                     );
         
@@ -97,6 +97,7 @@ public class Map {
         BigDecimal[] P = mInModel.getP();
         int count = mInModel.getNComponents();
         GMM OutModel = mInModel;
+        int vectorCount = input.getColumnDimension();
         double[] oldP = new double[count];
         double[] newP = new double[count];
         
@@ -112,7 +113,7 @@ public class Map {
             for (int i = 0; i < count; i ++) {
                 midWeight = posteriorSum(posterior[i]);
                 coeff = midWeight / (midWeight + mRelativeCoeff);
-                newP[i] = midWeight * coeff + oldP[i] * (1 - coeff);
+                newP[i] = midWeight * coeff / vectorCount + oldP[i] * (1 - coeff);
             }
             newP = GMM.normilize(newP);
             oldP = Arrays.copyOf(oldP, count);
@@ -121,21 +122,7 @@ public class Map {
         
         
         return OutModel;
-    }
-    
-    public Matrix transpose(Matrix src) {
-      int m = src.getRowDimension();
-      int n = src.getColumnDimension();
-      double[][] A = src.getArray();
-      Matrix X = new Matrix(n,m);
-      double[][] C = X.getArray();
-      for (int i = 0; i < m; i++) {
-         for (int j = 0; j < n; j++) {
-            C[j][i] = A[i][j];
-         }
-      }
-      return X;
-   }    
+    }  
     
     /*
     private Matrix midMu(Matrix postVector, Matrix[] input, double midWeight) {
