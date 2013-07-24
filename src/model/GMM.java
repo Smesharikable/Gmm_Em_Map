@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,8 +17,8 @@ import java.util.logging.Logger;
 public class GMM {
     private Matrix[] mMu;
     private Matrix[] mSigma;
-    private BigDecimal[] mP;
-    private BigDecimal[] mMultiplier;
+    private double[] mP;
+    private double[] mMultiplier;
     private Matrix[] mInvSigmas;
     private int mCount;
     private int mDimension;
@@ -32,20 +30,10 @@ public class GMM {
      * @param sigma - d by d covariations matrices
      * @param p  - array of proportions
      */
-    public GMM(Matrix[] mu, Matrix[] sigma, BigDecimal[] p) {
-        mMu = mu;
-        mSigma = sigma;
-        mP = p;
-        initialize();
-    }
-    
     public GMM(Matrix[] mu, Matrix[] sigma, double[] p) {
         mMu = mu;
         mSigma = sigma;
-        mP = new BigDecimal[p.length];
-        for (int i = 0; i < p.length; i ++) {
-            mP[i] = new BigDecimal(p[i]);
-        }
+        mP = p;
         initialize();
     }
     
@@ -54,7 +42,7 @@ public class GMM {
             ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fin)));
             mMu = (Matrix[]) ois.readObject();
             mSigma = (Matrix[]) ois.readObject();
-            mP = (BigDecimal[]) ois.readObject();
+            mP = (double[]) ois.readObject();
             initialize();
         } catch (IOException ex) {
             Logger.getLogger(GMM.class.getName()).log(Level.SEVERE, null, ex);
@@ -67,18 +55,18 @@ public class GMM {
     
     public Matrix[] getSigma() { return mSigma; }
     
-    public BigDecimal[] getP() { return mP; }
+    public double[] getP() { return mP; }
     
     public int getNComponents() { return mCount; }
     
     public int getNDimensions() { return mDimension; }
     
-    public BigDecimal prior(Matrix vector) {
-        BigDecimal result = new BigDecimal(0, MathContext.DECIMAL128);
-        BigDecimal temp;
+    public double prior(Matrix vector) {
+        double result = 0;
+        double temp;
         for (int i = 0; i < mCount; i ++) {
             temp = componentDensity(i, vector);
-            result = result.add(temp.multiply(mP[i]));
+            result += temp * mP[i];
         }
         return result;
     }
@@ -93,15 +81,12 @@ public class GMM {
     public Matrix[] posterior(Matrix input) {
         Matrix[] result = new Matrix[mCount];
         Matrix temp;
+        double value;
         for (int component = 0; component < mCount; component ++) {
             result[component] = new Matrix(1, input.getColumnDimension());
             for (int vector = 0; vector < input.getColumnDimension(); vector ++) {
                 temp = input.getMatrix(0, input.getRowDimension() - 1, vector, vector);
-                double value = mP[component].multiply(
-                            componentDensity(component, temp)
-                        ).divide(
-                            prior(temp), MathContext.DECIMAL128
-                        ).doubleValue();
+                value = mP[component] * componentDensity(component, temp) / prior(temp);
                 result[component].set(0, vector, value);
             }
         }
@@ -120,30 +105,20 @@ public class GMM {
     private void initialize() {
         mCount = mP.length;
         mDimension = mMu[0].getRowDimension();
-        mMultiplier = new BigDecimal[mCount];
+        mMultiplier = new double[mCount];
         mInvSigmas = new Matrix[mCount];
         for (int i = 0; i < mCount; i ++) {
-            double temp = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
-            mMultiplier[i] = new BigDecimal(
-                    1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det())),
-                    MathContext.DECIMAL128);
+            //double temp = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
+            mMultiplier[i] = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
             mInvSigmas[i] = mSigma[i].inverse();
         }
     }
     
-    private BigDecimal componentDensity(int i, Matrix vector) {
+    private double componentDensity(int i, Matrix vector) {
         Matrix secondMult = vector.minus(mMu[i]);
         Matrix firstMult = secondMult.transpose();
         double degree = -0.5 * firstMult.times(mInvSigmas[i]).times(secondMult).get(0, 0);
-        
-        if (degree < mMinDegree) return BigDecimal.ZERO;
-        
-        int intDegree = (int) degree;
-        BigDecimal bdResult = new BigDecimal(Math.E, MathContext.DECIMAL128);
-        bdResult = bdResult.pow(intDegree, MathContext.DECIMAL128);
-        BigDecimal fault = new BigDecimal(Math.exp(degree - intDegree), MathContext.DECIMAL128);
-        
-        return bdResult.multiply(fault).multiply(mMultiplier[i]);
+        return Math.exp(degree)  * mMultiplier[i];
     }
     
 }

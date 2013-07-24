@@ -1,7 +1,6 @@
 package algorithms;
 
 import Jama.Matrix;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import model.GMM;
 
@@ -30,7 +29,7 @@ public class Map {
     public GMM fitByMeans(Matrix input, int iterations) {
         Matrix[] oldMu = mInModel.getMu();
         Matrix[] oldSigma = mInModel.getSigma();
-        BigDecimal[] oldP = mInModel.getP();
+        double[] oldP = mInModel.getP();
         int count = mInModel.getNComponents();
         GMM OutModel = mInModel;
         Matrix trInput = input.transpose();
@@ -94,7 +93,7 @@ public class Map {
     private GMM fitByWeights(Matrix input, int iterations) {
         Matrix[] oldMu = mInModel.getMu();
         Matrix[] oldSigma = mInModel.getSigma();
-        BigDecimal[] P = mInModel.getP();
+        double[] P = mInModel.getP();
         int count = mInModel.getNComponents();
         GMM OutModel = mInModel;
         int vectorCount = input.getColumnDimension();
@@ -103,10 +102,7 @@ public class Map {
         
         double midWeight;
         double coeff;
-        
-        for (int i = 0; i < count; i ++) {
-            oldP[i] = P[i].doubleValue();
-        }
+        System.arraycopy(P, 0, oldP, 0, count);
         
         for (int t = 0; t < iterations; t ++) {
             Matrix[] posterior = OutModel.posterior(input);
@@ -124,21 +120,4 @@ public class Map {
         return OutModel;
     }  
     
-    /*
-    private Matrix midMu(Matrix postVector, Matrix[] input, double midWeight) {
-        int dimension = mInModel.getNDimensions();
-        double[] result = new double[dimension];
-        // computing midMu
-        for (int vector = 0; vector < input.length; vector ++) {
-            for (int coord = 0; coord < dimension; coord ++) {
-                result[coord] += postVector.get(0, vector) * input[vector].get(coord, 0);
-            }
-        }
-        // computing newMu
-        for (int coord = 0; coord < dimension; coord ++) {
-            result[coord] /= midWeight;
-        }
-        return new Matrix(result, dimension);
-    }
-    */
 }

@@ -84,14 +84,12 @@ public class MapTest {
         double[][] expResult = {{0.5054, 0.4946},
                                 {0.4880, 0.5120}};
         GMM[] result = instance.fitByWeights(input, iterations, states);
-        BigDecimal[][] bdres = new BigDecimal[2][testGMM.getNComponents()];
+        double[][] bdres = new double[2][testGMM.getNComponents()];
         bdres[0] = result[0].getP();
         bdres[1] = result[1].getP();
         double[][] res = new double[2][testGMM.getNComponents()];
         for (int i = 0; i < 2; i ++) {
-            for (int j = 0; j < testGMM.getNComponents(); j++) {
-                res[i][j] = bdres[i][j].doubleValue();
-            }
+            System.arraycopy(bdres[i], 0, res[i], 0, testGMM.getNComponents());
         }
         
         assertArrayEquals(expResult[0], res[0], 0.0001);

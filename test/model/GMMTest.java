@@ -50,7 +50,7 @@ public class GMMTest {
         GMM instance = GMMTest.testGMM();
         
         double expResult = 0.0912;
-        double result = instance.prior(vector).doubleValue();
+        double result = instance.prior(vector);
         assertEquals(expResult, result, 0.0001);
     }
 
