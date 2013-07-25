@@ -41,7 +41,7 @@ public class Map {
         for (int t = 0; t < iterations; t ++) {
             Matrix[] posterior = OutModel.posterior(input);
             for (int i = 0; i < count; i ++) {
-                midWeight = posteriorSum(posterior[i]);
+                midWeight = GMM.posteriorSum(posterior[i]);
                 coeff = midWeight / (midWeight + mRelativeCoeff);
                 // computing midMu
                 newMu[i] = posterior[i].times(trInput).times(1 / midWeight).transpose();
@@ -81,15 +81,6 @@ public class Map {
         return result;
     }
     
-    private double posteriorSum(Matrix postVector) {
-        double result = 0;
-        double[][] value = postVector.getArray();
-        for (int i = 0; i < postVector.getColumnDimension(); i ++) {
-            result += value[0][i];
-        }
-        return result;
-    }
-    
     private GMM fitByWeights(Matrix input, int iterations) {
         Matrix[] oldMu = mInModel.getMu();
         Matrix[] oldSigma = mInModel.getSigma();
@@ -107,7 +98,7 @@ public class Map {
         for (int t = 0; t < iterations; t ++) {
             Matrix[] posterior = OutModel.posterior(input);
             for (int i = 0; i < count; i ++) {
-                midWeight = posteriorSum(posterior[i]);
+                midWeight = GMM.posteriorSum(posterior[i]);
                 coeff = midWeight / (midWeight + mRelativeCoeff);
                 newP[i] = midWeight * coeff / vectorCount + oldP[i] * (1 - coeff);
             }

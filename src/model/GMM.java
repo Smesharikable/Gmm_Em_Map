@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,15 +51,50 @@ public class GMM {
         }
     }
     
+    public GMM copy() {
+        return new GMM(this.getMuCopy(), this.getSigmaCopy(), this.getPCopy());
+    }
+    
     public Matrix[] getMu() { return mMu; }
+    
+    public Matrix[] getMuCopy() {
+        Matrix[] copiedMu = new Matrix[mCount];
+        for (int i = 0; i < mCount; i++) {
+            copiedMu[i] = mMu[i].copy();
+        }
+        return copiedMu; 
+    }
     
     public Matrix[] getSigma() { return mSigma; }
     
+    public Matrix[] getSigmaCopy() { 
+        Matrix[] copiedSigma = new Matrix[mCount];
+        for (int i = 0; i < mCount; i++) {
+            copiedSigma[i] = mSigma[i].copy();
+        }
+        return copiedSigma;
+    }
+    
     public double[] getP() { return mP; }
+    
+    public double[] getPCopy() { 
+        return Arrays.copyOf(mP, mCount); 
+    }
     
     public int getNComponents() { return mCount; }
     
     public int getNDimensions() { return mDimension; }
+    
+    public double getLogLikelyhood(Matrix input) {
+        double result = 0;
+        int m = input.getRowDimension();
+        
+        for (int i = 0; i < input.getColumnDimension(); i++) {
+            result += Math.log(prior(input.getMatrix(0, m - 1, i, i)));
+        }
+        
+        return result;
+    }
     
     public double prior(Matrix vector) {
         double result = 0;
@@ -88,6 +124,15 @@ public class GMM {
                 value = mP[component] * componentDensity(component, temp) / prior(temp);
                 result[component].set(0, vector, value);
             }
+        }
+        return result;
+    }
+    
+    public static double posteriorSum(Matrix postVector) {
+        double result = 0;
+        double[][] value = postVector.getArray();
+        for (int i = 0; i < postVector.getColumnDimension(); i ++) {
+            result += value[0][i];
         }
         return result;
     }
