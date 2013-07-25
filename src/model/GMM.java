@@ -59,7 +59,7 @@ public class GMM {
     public int getNComponents() { return mCount; }
     
     public int getNDimensions() { return mDimension; }
-    
+        
     public double prior(Matrix vector) {
         double result = 0;
         double temp;

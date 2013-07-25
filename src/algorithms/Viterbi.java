@@ -81,7 +81,7 @@ public class Viterbi {
      * @param M - massive double-elements
      * @return max element of massive
      */
-    public double myMax(double[] M) {
+    public static double myMax(double[] M) {
         double Mmax = -1000000;
         for (int i = 0; i < M.length; i++) {
             if (M[i] > Mmax && M[i] != 0) {
@@ -98,7 +98,7 @@ public class Viterbi {
  * @param M - massive double-elements
  * @return number of max elemnt in massive
  */
-    public int argmax(double[] M) {
+    public static int argmax(double[] M) {
         double Mmax = -1000000;
         int Imax = 0;
         for (int i = 0; i < M.length; i++) {
