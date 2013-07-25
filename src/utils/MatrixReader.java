@@ -24,17 +24,17 @@ public class MatrixReader {
      * @return array of feature matrix
      */
     public static Matrix[] parseMatrix(Matrix data, int stateAmount) {
-        int vectorAmount = data.getColumnDimension();
+        int vectorAmount = data.getRowDimension();
         int blockLength = vectorAmount / stateAmount;
         Matrix[] outMatrix = new Matrix[stateAmount];
         for (int i = 0; i < stateAmount; i++ ) {
-            int[] arrayOfRows;
-            for (int j = i * blockLength; j < (i + 1) * blockLength; j++) {
-                
+            int[] arrayOfRows = new int[blockLength];
+            for (int j = 0; j < blockLength; j++) {
+                arrayOfRows[j] = i * blockLength + j;
             }
             outMatrix[i] = data.getMatrix(arrayOfRows, 0, 38);
         } 
-        return null;
+        return outMatrix;
     }
     
     /**

@@ -59,4 +59,18 @@ public class MatrixReaderTest {
         assertEquals(reader.getMatrix().get(0, 0), -10.615, 0.001);
         assertEquals(reader.getMatrix().get(9, 1), 10.148, 0.001);
     }
+
+    /**
+     * Test of parseMatrix method, of class MatrixReader.
+     */
+    @Test
+    public void testParseMatrix() {
+        String path1 = "c:\\Voici\\input.txt";
+        MatrixReader reader = new MatrixReader(path1);
+        Matrix data = reader.getMatrix();
+        Matrix[] parsedMatrix = MatrixReader.parseMatrix(data, 10);
+        assertEquals(parsedMatrix[0].get(4, 2), data.get(4, 2), 0.001);
+        assertEquals(parsedMatrix[2].get(0, 0), data.get(32, 0), 0.001);
+        assertEquals(parsedMatrix[1].get(0, 0), data.get(16, 0), 0.001);
+    }
 }
