@@ -12,31 +12,39 @@ import java.io.IOException;
  */
 public class MatrixReader {
     
-    public MatrixReader(String path) throws FileNotFoundException, IOException {
+    public MatrixReader(String path) {
        this.filePath = path;
-       this.featVectAmount = 0;
-       BufferedReader reader = new BufferedReader(new FileReader(filePath));
-       while ((reader.readLine()) != null) {
-           featVectAmount++;
-       }
-       reader.close();
+       this.countVectAmount();
        this.inMatrix = new Matrix(featVectAmount, featVectDimension);
     }
     
     /**
-     * Generates feature-matrix inMatrix, using data from filePath
+     * Divides data matrix into array of matrix 
+     * @param data amount of feature vectors X dimension(39)
+     * @return array of feature matrix
      */
-    private void buildMatrix() throws FileNotFoundException, IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
-        for (int i = 0; i < featVectAmount; i++) {
-            String line = reader.readLine();
-            line = line.substring(1, line.length() - 2); // cutting off ";"
-            String[] lines = line.split(" "); // making token array
-            for (int j = 0; j < lines.length; j++) {
-                double value = Double.parseDouble(lines[j]);
-                this.inMatrix.set(i, j, value);
+    public static Matrix[] parseMatrix(Matrix data, int stateAmount) {
+        int vectorAmount = data.getRowDimension();
+        int blockLength = vectorAmount / stateAmount;
+        Matrix[] outMatrix = new Matrix[stateAmount];
+        for (int i = 0; i < stateAmount; i++ ) {
+            int[] arrayOfRows = new int[blockLength];
+            for (int j = 0; j < blockLength; j++) {
+                arrayOfRows[j] = i * blockLength + j;
             }
-        }
+            outMatrix[i] = data.getMatrix(arrayOfRows, 0, 38);
+        } 
+        return outMatrix;
+    }
+    
+    /**
+     * Sets new path for data file
+     * @param path Path for data file
+     */
+    public void setPath(String path) {
+        this.filePath = path;
+        this.countVectAmount();
+        this.inMatrix = new Matrix(featVectAmount, featVectDimension);
     }
     
     /**
@@ -55,11 +63,36 @@ public class MatrixReader {
     }
     
     /**
-     * Sets new path for data file
-     * @param path Path for data file
+     * Counting amount of feature vectors in data file
      */
-    public void setPath(String path) {
-        this.filePath = path;
+    private void countVectAmount() {
+        featVectAmount = 0;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            while ((reader.readLine()) != null) {
+                featVectAmount++;
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println(ex.toString());
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+    }
+    
+    /**
+     * Generates feature-matrix inMatrix, using data from filePath
+     */
+    private void buildMatrix() throws FileNotFoundException, IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        for (int i = 0; i < featVectAmount; i++) {
+            String line = reader.readLine();
+            line = line.substring(0, line.length() - 2); // cutting off ";"
+            String[] lines = line.split(" "); // making token array
+            for (int j = 0; j < lines.length; j++) {
+                double value = Double.parseDouble(lines[j]);
+                this.inMatrix.set(i, j, value);
+            }
+        }
     }
     
     /**
@@ -69,6 +102,7 @@ public class MatrixReader {
     /**
      * Matrix which will be filled
      */
+    
     private Matrix inMatrix;
     
     /**
