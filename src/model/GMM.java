@@ -152,7 +152,6 @@ public class GMM {
         mMultiplier = new double[mCount];
         mInvSigmas = new Matrix[mCount];
         for (int i = 0; i < mCount; i ++) {
-            //double temp = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
             mMultiplier[i] = 1 / (Math.pow(2 * Math.PI, mDimension / 2.0) * Math.sqrt(mSigma[i].det()));
             mInvSigmas[i] = mSigma[i].inverse();
         }

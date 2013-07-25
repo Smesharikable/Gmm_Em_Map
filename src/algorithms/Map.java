@@ -1,7 +1,6 @@
 package algorithms;
 
 import Jama.Matrix;
-import java.util.Arrays;
 import model.GMM;
 
 /**
@@ -105,7 +104,6 @@ public class Map {
             }
             newP = GMM.normilize(newP);
         }
-        
         
         return OutModel;
     }  

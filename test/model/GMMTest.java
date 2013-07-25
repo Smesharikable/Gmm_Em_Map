@@ -41,10 +41,6 @@ public class GMMTest {
         System.out.println("prior");
         
         double[] input = {2, 2};
-//        double[][][] insigma = {
-//            {{5.7718, 1.7160},  {1.7160, 0.5102}}, 
-//            {{3.0287, -0.7990}, {-0.7990, 0.2108}}
-//        };
         
         Matrix vector = new Matrix(input, 2);
         GMM instance = GMMTest.testGMM();
