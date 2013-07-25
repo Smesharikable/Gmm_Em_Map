@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,7 +17,7 @@ import java.util.logging.Logger;
  *
  * @author I&V
  */
-public class GMM {
+public class GMM implements Serializable{
     private Matrix[] mMu;
     private Matrix[] mSigma;
     private double[] mP;
@@ -43,6 +45,7 @@ public class GMM {
             mMu = (Matrix[]) ois.readObject();
             mSigma = (Matrix[]) ois.readObject();
             mP = (double[]) ois.readObject();
+            ois.close();
             initialize();
         } catch (IOException ex) {
             Logger.getLogger(GMM.class.getName()).log(Level.SEVERE, null, ex);
@@ -144,6 +147,46 @@ public class GMM {
             weights[i] /= sum;
         }
         return weights;
+    }
+    
+    /**
+     *
+     * @param componentsCount - count of gaussian componanets in GMM
+     * @param input - matrix D by N, where D - dimension, N - number of vectors
+     * @return GMM generated occording to input appropriate for EM algorithm
+     */
+    public static GMM generate(int componentsCount, Matrix input) {
+        double[] weigths = new double[componentsCount];
+        Matrix[] mu = new Matrix[componentsCount];
+        Matrix[] sigma = new Matrix[componentsCount];
+        Random rd = new Random();
+        int index;
+        int inputSize = input.getColumnDimension();
+        int dimension = input.getRowDimension();
+        
+        Arrays.fill(weigths, 1 / componentsCount);
+        for (int i = 0; i < componentsCount; i++) {
+            index = rd.nextInt(inputSize);
+            mu[i] = input.getMatrix(0, dimension - 1, index, index);
+        }
+        // computing Ex^2
+        double[] Ex_2 = new double[dimension];
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < inputSize; j++) {
+                Ex_2[i] += input.get(i, j);
+            }
+            Ex_2[i] /= inputSize;
+        }
+        // computins sigmas
+        for (int i = 0; i < componentsCount; i++) {
+            sigma[i] = new Matrix(dimension, dimension);
+            for (int j = 0; j < dimension; j++) {
+                sigma[i].set(j, j, Ex_2[j] - mu[i].get(j, 0));
+            }
+        }
+        
+        GMM result = new GMM(mu, sigma, weigths);
+        return result;
     }
     
     private void initialize() {

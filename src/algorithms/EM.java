@@ -11,11 +11,17 @@ import model.GMM;
  */
 public class EM {
     private GMM mInModel;
+    private int mComponentCount = 32;
     private double mLikelyhoodDelta = -0.01;
     private double mSigmaEpsilon = 0.01;
     private int mMaxIterations = 100;
     private boolean mIsChanges = true;
-
+    
+    public EM() {}
+    
+    public EM(int componentCount) {
+        mComponentCount= componentCount;
+    };
     
     public EM(GMM model) {
         mInModel = model;
@@ -58,6 +64,7 @@ public class EM {
     }
     
     public GMM doEM(Matrix input) {
+        if (mInModel == null) mInModel = GMM.generate(mComponentCount, input);
         Matrix tranInput = input.inverse();
         int inputSize = input.getColumnDimension();
         double newLikelyhood = - Double.MAX_VALUE;
