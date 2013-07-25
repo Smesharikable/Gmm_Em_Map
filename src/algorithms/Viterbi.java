@@ -37,6 +37,11 @@ public class Viterbi {
         algorithmViterbi();
     }*/
 
+    
+    /** Calculation path Viterbi
+     *      
+     * @return list of int - path
+     **/
     private int[] algorithmViterbi() {
         int T = gmms.length;
         double[][] Pr = new double[T][T];
@@ -71,6 +76,11 @@ public class Viterbi {
         return pathViterbi;
     }
 
+    /**
+     * 
+     * @param M - massive double-elements
+     * @return max element of massive
+     */
     public double myMax(double[] M) {
         double Mmax = -1000000;
         for (int i = 0; i < M.length; i++) {
@@ -83,7 +93,11 @@ public class Viterbi {
         }
         return Mmax;
     }
-
+/**
+ * 
+ * @param M - massive double-elements
+ * @return number of max elemnt in massive
+ */
     public int argmax(double[] M) {
         double Mmax = -1000000;
         int Imax = 0;
