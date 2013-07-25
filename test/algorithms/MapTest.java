@@ -72,25 +72,22 @@ public class MapTest {
     @Test
     public void testFitByWeights() {
         System.out.println("fitByWeights");
-        double[][] dinput = {{2, 1,   3}, 
-                             {2, 2.5, 4}};  
-        Matrix input = new Matrix(dinput, 2, 3);
+        double[] dinput_1 = {2, 2};
+        double[][] dinput_2 = {{1, 3}, 
+                             {2.5, 4}};
+        Matrix input_1 = new Matrix(dinput_1, 2);
+        Matrix input_2 = new Matrix(dinput_2, 2, 2);
         int iterations = 1;
-        int states = 2;
         
         GMM testGMM = GMMTest.testGMM();
         Map instance = new Map(testGMM);
         
         double[][] expResult = {{0.5054, 0.4946},
                                 {0.4880, 0.5120}};
-        GMM[] result = instance.fitByWeights(input, iterations, states);
-        double[][] bdres = new double[2][testGMM.getNComponents()];
-        bdres[0] = result[0].getP();
-        bdres[1] = result[1].getP();
+        
         double[][] res = new double[2][testGMM.getNComponents()];
-        for (int i = 0; i < 2; i ++) {
-            System.arraycopy(bdres[i], 0, res[i], 0, testGMM.getNComponents());
-        }
+        res[0] = instance.fitByWeights(input_1, iterations).getP();
+        res[1] = instance.fitByWeights(input_2, iterations).getP();
         
         assertArrayEquals(expResult[0], res[0], 0.0001);
         assertArrayEquals(expResult[1], res[1], 0.0001);
