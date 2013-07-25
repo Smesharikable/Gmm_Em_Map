@@ -2,6 +2,7 @@ package algorithms;
 
 import model.GMM;
 import model.HMM;
+import utils.MatrixReader;
 import Jama.Matrix;
 
 /**
@@ -13,27 +14,35 @@ public class Viterbi {
     public GMM[] gmms;
     public HMM hmm;
     public Matrix[] data;
+    public double Prob;
+    public int[] pathViterbi;
 
-    public Viterbi(GMM[] gmms, Matrix[] passw) {
+    public Viterbi(GMM[] gmms, Matrix passw) {
         this.gmms = gmms;
-        this.data = passw;
-        hmm = new HMM(gmms, passw);
+        this.data = MatrixReader.parseMatrix(passw, gmms.length);
+        hmm = new HMM(gmms, data);
         algorithmViterbi();
-        
-    }
-    
-    public Viterbi(Matrix[] passw){
-        hmm = new HMM(passw);
-        this.data = passw;
+        System.out.print("Path Viterbi: ");
+        printResult();
+        MatrixReader parser = new MatrixReader("password2.txt");
+        this.data = MatrixReader.parseMatrix(parser.getMatrix(), gmms.length);
         algorithmViterbi();
+        System.out.print("Current of states: ");
+        printResult();
     }
 
-    private void algorithmViterbi() {
-        int T = gmms.length; 
-        double[][] Pr = new double[T][T]; 
+    /*public Viterbi(Matrix passw) {
+        this.data = MatrixReader.parseMatrix(passw, gmms.length);
+        hmm = new HMM(data);
+        algorithmViterbi();
+    }*/
+
+    private int[] algorithmViterbi() {
+        int T = gmms.length;
+        double[][] Pr = new double[T][T];
         int[][] TIndex = new int[T][T];
         double[] temp = new double[T];
-        int[] pathViterbi = new int[T];
+        pathViterbi = new int[T];
 
         for (int i = 0; i < T; i++) {
             Pr[i][0] = hmm.pi[i] * hmm.B.get(i, 0);
@@ -49,7 +58,7 @@ public class Viterbi {
             }
         }
         for (int k = 0; k < T; k++) {
-            temp[k] = Pr[k][T-1];
+            temp[k] = Pr[k][T - 1];
         }
 
         pathViterbi[T - 1] = argmax(temp);
@@ -57,13 +66,9 @@ public class Viterbi {
         for (int i = T - 2; i > 1; i--) {
             pathViterbi[i] = TIndex[pathViterbi[i + 1]][i + 1];
         }
-
-        System.out.print("States: 1 ");
-        for (int n = 0; n < T - 2; n++) {
-            System.out.print(temp[n]);
-        }
-        System.out.print("\n");
-        System.out.print("Probability: " + myMax(temp));
+        Prob = myMax(temp);
+        
+        return pathViterbi;
     }
 
     public double myMax(double[] M) {
@@ -89,5 +94,14 @@ public class Viterbi {
             }
         }
         return Imax;
+    }
+    
+    private void printResult(){
+        System.out.print(" 1 ");
+        for (int n = 0; n < gmms.length - 2; n++) {
+            System.out.print(pathViterbi[n]);
+        }
+        System.out.print("\n");
+        System.out.print("Probability: " + Prob);
     }
 }
