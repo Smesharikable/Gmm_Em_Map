@@ -16,12 +16,15 @@ public class Viterbi {
 
     public Viterbi(GMM[] gmms, Matrix[] passw) {
         this.gmms = gmms;
+        this.data = passw;
         hmm = new HMM(gmms, passw);
         algorithmViterbi();
+        
     }
     
     public Viterbi(Matrix[] passw){
-        hmm = new HMM(gmms, passw);
+        hmm = new HMM(passw);
+        this.data = passw;
         algorithmViterbi();
     }
 
@@ -41,10 +44,8 @@ public class Viterbi {
             for (int j = 0; j < T; j++) {
                 for (int k = 0; k < T; k++) {
                     temp[k] = Pr[k][i - 1] + Math.log10(hmm.A.get(k, j));
-                   // temp[k] = Pr[k][i - 1] * hmm.A.get(k, j);
                 }
-                Pr[j][i] = myMax(temp) + Math.log10(hmm.B.get(i, j)); // mb *
-                TIndex[j][i] = argmax(temp);
+                Pr[j][i] = myMax(temp) + Math.log10(hmm.B.get(i, j));
             }
         }
         for (int k = 0; k < T; k++) {
