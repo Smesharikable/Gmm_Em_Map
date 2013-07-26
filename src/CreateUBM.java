@@ -14,11 +14,11 @@ import utils.MatrixReader;
  *
  * @author I&V
  */
-public class training {
+public class CreateUBM {
 
     /**
      * @param args the command line arguments
-     * args[0] - path to UBM training data
+     * args[0] - path to UBM CreateUBM data
      * args[1] - number of gaussian
      * args[3] - output file name
      */
@@ -34,9 +34,9 @@ public class training {
             oos.writeObject(ubm);
             oos.close();
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(training.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CreateUBM.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(training.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CreateUBM.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }

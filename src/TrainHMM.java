@@ -17,7 +17,7 @@ import utils.MatrixReader;
  *
  * @author I&V
  */
-public class verification {
+public class TrainHMM {
 
     /**
      * @param args the command line arguments
@@ -45,6 +45,7 @@ public class verification {
             int iterationsCount = Integer.parseInt(args[3]);
             Matrix[] stateInput = MatrixReader.parseMatrix(input, statesCount);
             Map map = new Map(ubm);
+            map.fitByMeans(input, iterationsCount);
             GMM[] stateGMMs = new GMM[statesCount];
             for (int i = 0; i < statesCount; i++) {
                 stateGMMs[i] = map.fitByWeights(stateInput[i], iterationsCount);
@@ -52,11 +53,11 @@ public class verification {
             
             Viterbi viterbi = new Viterbi(stateGMMs, input);
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(verification.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TrainHMM.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(verification.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TrainHMM.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(verification.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TrainHMM.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
