@@ -20,7 +20,7 @@ public class EM {
     public EM() {}
     
     public EM(int componentCount) {
-        mComponentCount= componentCount;
+        mComponentCount = componentCount;
     };
     
     public EM(GMM model) {
@@ -63,11 +63,17 @@ public class EM {
         mIsChanges = IsChanges;
     }
     
+    /**
+     *
+     * @param input - N-by-D matrix where features vectors represenred by rows
+     * @return Fitted GMM to input data
+     */
     public GMM doEM(Matrix input) {
+        // take an initial model
         if (mInModel == null) mInModel = GMM.generate(mComponentCount, input);
-        Matrix tranInput = input.inverse();
+        Matrix tranInput = input.transpose();
         int inputSize = input.getColumnDimension();
-        double newLikelyhood = - Double.MAX_VALUE;
+        double newLikelyhood = Double.NEGATIVE_INFINITY;
         double oldLikelyhood;
         int iterations = 0;
         
@@ -93,7 +99,7 @@ public class EM {
             for (int i = 0; i < count; i++) {
                 // p_i
                 newP[i] = GMM.posteriorSum(posterior[i]);
-                newMu[i] = posterior[i].times(tranInput).times(1 / newP[i]);
+                newMu[i] = posterior[i].times(tranInput).timesEquals(1 / newP[i]).transpose();
                 for (int j = 0; j < inputSize; j++) {
                     newSigma[i].plusEquals(
                             // x^2
@@ -113,6 +119,7 @@ public class EM {
             
             newLikelyhood = outModel.getLogLikelyhood(input);
             iterations ++;
+            System.out.println(newLikelyhood);
         } while (oldLikelyhood - newLikelyhood < mLikelyhoodDelta && iterations < mMaxIterations);
         
         if (mIsChanges) {
@@ -121,6 +128,10 @@ public class EM {
         return outModel;
     }
     
+    
+    /*
+     * Check covariance matrix to avoid singularity
+     */
     private void sigmaCorrection(Matrix sigma) {
         for (int i = 0; i < sigma.getColumnDimension(); i++) {
             if (sigma.get(i, i) < mSigmaEpsilon) {

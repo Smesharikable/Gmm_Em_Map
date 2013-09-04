@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * TODO optimize computation for diagonal covariance
  * @author I&V
  */
 public class GMM implements Serializable{
@@ -94,6 +94,7 @@ public class GMM implements Serializable{
         
         for (int i = 0; i < input.getColumnDimension(); i++) {
             result += Math.log(prior(input.getMatrix(0, m - 1, i, i)));
+            if (Double.isNaN(result)) return -Double.NEGATIVE_INFINITY;
         }
         
         return result;
@@ -153,7 +154,8 @@ public class GMM implements Serializable{
      *
      * @param componentsCount - count of gaussian componanets in GMM
      * @param input - matrix D by N, where D - dimension, N - number of vectors
-     * @return GMM generated occording to input appropriate for EM algorithm
+     * @return GMM generated according to input appropriate for EM algorithm
+     *      as a initial approximation
      */
     public static GMM generate(int componentsCount, Matrix input) {
         double[] weigths = new double[componentsCount];
@@ -164,20 +166,26 @@ public class GMM implements Serializable{
         int inputSize = input.getColumnDimension();
         int dimension = input.getRowDimension();
         
+        // equals weights
         Arrays.fill(weigths, 1 / componentsCount);
+        
+        // take a random vectors as mu
         for (int i = 0; i < componentsCount; i++) {
             index = rd.nextInt(inputSize);
             mu[i] = input.getMatrix(0, dimension - 1, index, index);
         }
+        
         // computing Ex^2
+        // TODO check this
         double[] Ex_2 = new double[dimension];
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < inputSize; j++) {
-                Ex_2[i] += input.get(i, j);
+                Ex_2[i] += input.get(i, j) * input.get(i, j);
             }
             Ex_2[i] /= inputSize;
         }
-        // computins sigmas
+        
+        // computing sigmas
         for (int i = 0; i < componentsCount; i++) {
             sigma[i] = new Matrix(dimension, dimension);
             for (int j = 0; j < dimension; j++) {
