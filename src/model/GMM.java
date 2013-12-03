@@ -84,6 +84,8 @@ public class GMM implements Serializable{
         return Arrays.copyOf(mP, mCount); 
     }
     
+    public double[] getMultiplier() { return mMultiplier; }
+    
     public int getNComponents() { return mCount; }
     
     public int getNDimensions() { return mDimension; }
@@ -161,29 +163,41 @@ public class GMM implements Serializable{
         Matrix[] sigma = new Matrix[componentsCount];
         Random rd = new Random();
         int index;
-        int inputSize = input.getColumnDimension();
-        int dimension = input.getRowDimension();
+        int inputSize = input.getRowDimension();
+        int dimension = input.getColumnDimension();
         
-        Arrays.fill(weigths, 1 / componentsCount);
+        Arrays.fill(weigths, 1.0 / componentsCount);
         for (int i = 0; i < componentsCount; i++) {
             index = rd.nextInt(inputSize);
-            mu[i] = input.getMatrix(0, dimension - 1, index, index);
+            mu[i] = input.getMatrix(index, index, 0, dimension - 1).transpose();
         }
         // computing Ex^2
         double[] Ex_2 = new double[dimension];
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < inputSize; j++) {
-                Ex_2[i] += input.get(i, j);
+                Ex_2[i] += input.get(j, i);
             }
             Ex_2[i] /= inputSize;
         }
-        // computins sigmas
-        for (int i = 0; i < componentsCount; i++) {
-            sigma[i] = new Matrix(dimension, dimension);
-            for (int j = 0; j < dimension; j++) {
-                sigma[i].set(j, j, Ex_2[j] - mu[i].get(j, 0));
+        // computing sigmas
+        double[][] s = new double[dimension][dimension];
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < inputSize; j++) {
+                s[i][i] += Math.pow(input.get(j, i) - Ex_2[i], 2);
             }
+            s[i][i] /= inputSize - 1;
+            //if (s[i][i] < 0) System.out.println("Ploho!");
         }
+        sigma[0] = new Matrix(s, dimension, dimension);
+        for (int i = 1; i < componentsCount; i++) {
+            sigma[i] = sigma[0].copy();
+        }
+//        for (int i = 0; i < componentsCount; i++) {
+//            sigma[i] = new Matrix(dimension, dimension);
+//            for (int j = 0; j < dimension; j++) {
+//                sigma[i].set(j, j, Ex_2[j] - mu[i].get(j, 0) * mu[i].get(j, 0));
+//            }
+//        }
         
         GMM result = new GMM(mu, sigma, weigths);
         return result;

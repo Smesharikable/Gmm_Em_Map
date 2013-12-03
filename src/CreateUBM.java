@@ -26,10 +26,10 @@ public class CreateUBM {
         // TODO code application logic here
         MatrixReader mr = new MatrixReader(args[0]);
         Matrix input = mr.getMatrix();
-        EM em = new EM(Integer.getInteger(args[1]));
+        EM em = new EM(Integer.parseInt(args[1]));
         GMM ubm = em.doEM(input);
         try {
-            FileOutputStream fos = new FileOutputStream(args[3]);
+            FileOutputStream fos = new FileOutputStream(args[2]);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(ubm);
             oos.close();

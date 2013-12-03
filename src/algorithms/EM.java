@@ -12,10 +12,15 @@ import model.GMM;
 public class EM {
     private GMM mInModel;
     private int mComponentCount = 32;
-    private double mLikelyhoodDelta = -0.01;
+    private double mLikelihoodDelta = -0.01;
     private double mSigmaEpsilon = 0.01;
     private int mMaxIterations = 100;
     private boolean mIsChanges = true;
+    
+    private double[][] mPosterior;
+    private double[] mPosteriorSum;
+    private double[] mDensity;
+    private double mLogLikelihood;
     
     public EM() {}
     
@@ -29,18 +34,18 @@ public class EM {
     
     public EM(GMM model, double LikelyhoodDelta) {
         mInModel = model;
-        mLikelyhoodDelta = LikelyhoodDelta;
+        mLikelihoodDelta = LikelyhoodDelta;
     }
     
     public EM(GMM model, double LikelyhoodDelta, double SigmaEpsilon) {
         mInModel = model;
-        mLikelyhoodDelta = LikelyhoodDelta;
+        mLikelihoodDelta = LikelyhoodDelta;
         mSigmaEpsilon = SigmaEpsilon;
     }
     
     public EM(GMM model, double LikelyhoodDelta, double SigmaEpsilon, int MaxIterations) {
         mInModel = model;
-        mLikelyhoodDelta = LikelyhoodDelta;
+        mLikelihoodDelta = LikelyhoodDelta;
         mSigmaEpsilon = SigmaEpsilon;
         mMaxIterations = MaxIterations;
     }
@@ -65,12 +70,11 @@ public class EM {
     
     public GMM doEM(Matrix input) {
         if (mInModel == null) mInModel = GMM.generate(mComponentCount, input);
-        Matrix tranInput = input.inverse();
-        int inputSize = input.getColumnDimension();
-        double newLikelyhood = - Double.MAX_VALUE;
-        double oldLikelyhood;
+        //Matrix tranInput = input.inverse();
+        int inputSize = input.getRowDimension();
+        double newLikelihood = - Double.MAX_VALUE;
+        double oldLikelihood;
         int iterations = 0;
-        
         
         GMM outModel;
         if (mIsChanges) {
@@ -80,51 +84,104 @@ public class EM {
         }
         int count = outModel.getNComponents();
         int dimension = outModel.getNDimensions();
-        Matrix[] posterior;
-        
+        //Matrix[] posterior = new Matrix[count];
         Matrix[] newMu = outModel.getMu();
         Matrix[] newSigma = outModel.getSigma();
         double[] newP = outModel.getP();
+        mDensity = new double[inputSize];
+        mPosterior = new double[inputSize][count];
+        mPosteriorSum = new double[mComponentCount];
+        double[][] in = input.getArray();
+        double[][] Mu;
+        double[][] Sigma;
         
         do {
-            oldLikelyhood = newLikelyhood;            
-            posterior = outModel.posterior(input);
+            // Estimation step
+            // computing posterior and log-likelihood
+            oldLikelihood = newLikelihood;
+            estimation(input, newMu, newSigma, newP);
+            newLikelihood = mLogLikelihood;
             
+            if (oldLikelihood + newLikelihood > mLikelihoodDelta) break;
+            
+            // Maximization step
             for (int i = 0; i < count; i++) {
                 // p_i
-                newP[i] = GMM.posteriorSum(posterior[i]);
-                newMu[i] = posterior[i].times(tranInput).times(1 / newP[i]);
-                for (int j = 0; j < inputSize; j++) {
-                    newSigma[i].plusEquals(
-                            // x^2
-                            input.getMatrix(0, dimension - 1, i, i).times(
-                            tranInput.getMatrix(i, i, 0, dimension - 1)
-                            // p_i
-                            ).times(posterior[i].get(0, i))
-                    );
+                newP[i] = mPosteriorSum[i];
+                // compute Mu and Sigma
+                Mu = newMu[i].getArray();
+                Sigma = newSigma[i].getArray();
+                for (int j = 0; j < dimension; j++) {
+                    for (int k = 0; k < inputSize; k++) {
+                        Mu[j][0] += mPosterior[k][i] * in[k][j];
+                        Sigma[j][j] += Mu[j][0] * in[k][j];
+                    }
+                    Mu[j][0] /= newP[i];
                 }
-                newSigma[i].timesEquals(newP[i]).minusEquals(
-                        // mu^2
-                        newMu[i].times(newMu[i].transpose())
-                );
-                sigmaCorrection(newSigma[i]);
+                // normalize
+                //newMu[i].timesEquals(1 / newP[i]);
+                for (int j = 0; j < dimension; j++) {
+                    Sigma[j][j] = Sigma[j][j] / newP[i] - Mu[j][0] * Mu[j][0];
+                    if (Sigma[j][j] < mSigmaEpsilon) Sigma[j][j] = mSigmaEpsilon;
+                }
                 newP[i] /= inputSize;
             }
-            
-            newLikelyhood = outModel.getLogLikelyhood(input);
             iterations ++;
-        } while (oldLikelyhood - newLikelyhood < mLikelyhoodDelta && iterations < mMaxIterations);
+        } while (iterations < mMaxIterations);
         
-        if (mIsChanges) {
-            return outModel.copy();
-        }
         return outModel;
     }
     
-    private void sigmaCorrection(Matrix sigma) {
-        for (int i = 0; i < sigma.getColumnDimension(); i++) {
-            if (sigma.get(i, i) < mSigmaEpsilon) {
-                sigma.set(i, i, mSigmaEpsilon);
+    /*
+     * mPosterior[j][i] - posterior probability of vector j belonging to cluster i
+     */
+    private void estimation(Matrix input, Matrix[] mu, Matrix[] sigma, double[] p) {
+        // compute loglikelihood of each component
+        int dimension = mInModel.getNDimensions();
+        // TODO these arrays will be enormous
+        double[] maxLL = new double[input.getRowDimension()];
+        double[][] vector;
+        double sigmaDet = 1.0;
+        double mahalanSqr = 0;
+        
+        for (int i = 0; i < maxLL.length; i++) {
+            maxLL[i] = Double.NEGATIVE_INFINITY;
+        }
+        
+        vector = input.getArray();
+        for (int i = 0; i < p.length; i++) {
+            for (int j = 0; j < dimension; j++) {
+                sigmaDet *= sigma[i].get(j, j);
+            }
+            for (int j = 0; j < input.getRowDimension(); j++) {
+                for (int k = 0; k < dimension; k++) {
+                    mahalanSqr += Math.pow(vector[j][k] - mu[i].get(k, 0), 2) / sigma[i].get(k, k);
+                }
+                // log prior probability
+                mPosterior[j][i] = (dimension * Math.log(2 * Math.PI) 
+                        - Math.log(sigmaDet) - mahalanSqr) / 2 + Math.log(p[i]);
+                //if (mPosterior[j][i] > 0) System.out.println("Problem");
+                if (mPosterior[j][i] > maxLL[j]) {
+                    maxLL[j] = mPosterior[j][i];
+                }
+                mahalanSqr = 0;
+            }
+            sigmaDet = 1.0;
+            mPosteriorSum[i] = 0;
+        }
+        
+        mLogLikelihood = 0;
+        for (int i = 0; i < input.getRowDimension(); i++) {
+            mDensity[i] = 0;
+            for (int j = 0; j < p.length; j++) {
+                mPosterior[i][j] = Math.exp(mPosterior[i][j] - maxLL[i]);
+                mDensity[i] += mPosterior[i][j];
+            }
+            mLogLikelihood += Math.log(mDensity[i]) + maxLL[i];
+            // finishing compute posterior probability
+            for (int j = 0; j < p.length; j++) {
+                mPosterior[i][j] /= mDensity[i];
+                mPosteriorSum[j] += mPosterior[i][j];
             }
         }
     }
